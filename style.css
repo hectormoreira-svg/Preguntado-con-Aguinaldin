@@ -1,0 +1,68 @@
+body {
+            font-family: 'Poppins', sans-serif;background: linear-gradient(130deg, #98d39b 50%, #a4d48d 100%);
+            min-height: 100vh;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .animate-pop {
+            animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes pulseSlow {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .animate-pulse-slow {
+            animation: pulseSlow 2s infinite ease-in-out;
+        }
+
+        /* Option button transitions */
+        .btn-option {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-option:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-option:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .correct-anim {
+            animation: popIn 0.3s ease-out forwards;
+            background-color: #10b981 !important;
+            border-color: #059669 !important;
+            color: white !important;
+        }
+
+        .wrong-anim {
+            animation: shake 0.4s ease-in-out forwards;
+            background-color: #ef4444 !important;
+            border-color: #dc2626 !important;
+            color: white !important;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+
+        .inicio {
+            width: 720px;
+            height: 680px;
+        }

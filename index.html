@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preguntados Con Aguinaldin</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Category Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Animación de entrada del cartel de retroalimentación */
+        @keyframes feedbackIn {
+            from { opacity: 0; transform: translateY(8px) scale(0.98); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .feedback-in { animation: feedbackIn 0.25s ease-out; }
+        @media (prefers-reduced-motion: reduce) {
+            .feedback-in { animation: none; }
+        }
+    </style>
+</head>
+<body class="h-full flex items-center justify-center p-4">
+    <audio id="bg-music" src="game show theme song 30 minutes.mp3" loop preload="auto"></audio>
+    <audio id="sfx-correct" src="sonido_respuesta_correcta_confeti.wav" preload="auto"></audio>
+<audio id="sfx-wrong" src="sonido_respuesta_incorrecta_caricaturesco.wav" preload="auto"></audio>
+
+    <div id="game-container" class="w-full max-w-lg glass-card rounded-3xl p-6 sm:p-8 relative overflow-hidden my-auto">
+        <button id="btn-music" type="button" aria-label="Activar o silenciar música"
+    class="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 shadow flex items-center justify-center transition-all">
+    <i id="music-icon" class="fa-solid fa-volume-high"></i>
+</button>
+        <!-- ================= PANTALLA DE INICIO ================= -->
+        <div id="screen-start" class="text-center py-4 space-y-6">
+            <div class="inline-block rounded-full overflow-hidden shadow-lg bg-white">
+                <img src="Aguinaldin feliz.png" alt="Aguinaldín" class="w-32 h-32 object-cover">
+            </div>
+            
+            <div>
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-800 tracking-tight">Preguntados con Aguinaldín</h1>
+                <p class="text-slate-500 mt-2 font-medium">Demuestra cuánto sabes del aguinaldo</p>
+            </div>
+
+            <div class="bg-emerald-100 text-emerald-700 p-2.5 rounded-xl flex flex-col items-center gap-1 font-bold">
+                <i class="fa-solid fa-money-bill-wave text-lg text-emerald-500"></i> Aguinaldo
+            </div>
+<div>
+    <input id="player-name" type="text" maxlength="15" placeholder="Escribí tu nombre"
+        class="w-full py-3 px-4 rounded-2xl border-2 border-slate-200 text-center font-semibold text-slate-700 focus:outline-none focus:border-indigo-400">
+    <p id="name-error" class="hidden text-rose-500 text-xs font-semibold mt-1">Ingresá tu nombre para jugar</p>
+</div>
+
+<button id="btn-start" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-lg rounded-2xl shadow-lg hover:shadow-indigo-500/30 transition-all transform active:scale-95 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-play"></i> ¡Comenzar Juego!
+            </button>
+
+<div class="text-left">
+    <h3 class="text-sm font-extrabold text-slate-700 uppercase tracking-wider mb-2">
+        <i class="fa-solid fa-trophy text-amber-500"></i> Ranking
+    </h3>
+    <ol id="ranking-start" class="space-y-1.5 text-sm"></ol>
+</div>
+        </div>
+
+        <!-- ================= PANTALLA DE JUEGO ================= -->
+        <div id="screen-quiz" class="hidden space-y-6">
+            
+            <!-- Top Bar: Progress, Timer, Streak -->
+            <div class="flex items-center justify-between gap-3">
+                <!-- Streak Badge -->
+                <div class="flex items-center gap-1.5 bg-amber-100 text-amber-700 px-3 py-1.5 rounded-full text-sm font-bold shadow-sm">
+                    <i class="fa-solid fa-fire text-amber-500 animate-bounce"></i>
+                    <span id="streak-count">0</span>
+                </div>
+
+                <!-- Timer Bar & Text -->
+                <div class="flex-1 bg-slate-100 h-3 rounded-full overflow-hidden relative border border-slate-200">
+                    <div id="timer-bar" class="h-full bg-indigo-600 transition-all duration-100 ease-linear w-full"></div>
+                </div>
+                
+                <div class="font-extrabold text-slate-700 text-sm w-8 text-right" id="timer-text">15s</div>
+            </div>
+
+            <!-- Header Info: Category & Question Counter -->
+            <div class="flex items-center justify-between">
+                <span id="category-badge" class="px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-sm">
+                    <i id="category-icon" class="fa-solid"></i>
+                    <span id="category-name">Categoría</span>
+                </span>
+                <span id="question-progress" class="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Pregunta 1/6
+                </span>
+            </div>
+
+            <!-- Question Box -->
+            <div class="min-h-[90px] flex items-center justify-center text-center">
+                <h2 id="question-text" class="text-lg sm:text-xl font-bold text-slate-800 leading-snug">
+                    ¿Cargando pregunta...?
+                </h2>
+            </div>
+
+            <!-- Options Container -->
+            <div id="options-container" class="grid grid-cols-1 gap-3">
+                <!-- Se generan dinámicamente -->
+            </div>
+
+            <!-- Cartel de retroalimentación (se muestra al responder) -->
+            <div id="feedback-banner" class="hidden rounded-2xl border-2 p-4 flex items-start gap-3 text-left" role="status" aria-live="polite">
+                <i id="feedback-icon" class="fa-solid text-2xl mt-0.5"></i>
+                <div>
+                    <p id="feedback-title" class="font-extrabold text-base"></p>
+                    <p id="feedback-text" class="text-sm font-medium mt-0.5"></p>
+                </div>
+            </div>
+
+            <!-- Score Bar Footing -->
+            <div class="flex items-center justify-between pt-2 text-xs font-semibold text-slate-500">
+                <span>Puntaje: <strong id="score-text" class="text-indigo-600 font-bold text-sm">0</strong></span>
+                
+                <div class="flex items-center gap-2">
+                    <button id="btn-home-quiz" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl text-sm transition-all shadow" aria-label="Volver al inicio">
+                        <i class="fa-solid fa-house"></i>
+                    </button>
+                    <button id="btn-prev" class="hidden px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-sm transition-all shadow">
+                        <i class="fa-solid fa-arrow-left mr-1"></i> Anterior
+                    </button>
+
+                    <button id="btn-next" class="hidden px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-sm transition-all shadow">
+                        Siguiente <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PANTALLA FINAL DE RESULTADOS ================= -->
+        <div id="screen-result" class="hidden text-center py-4 space-y-6">
+            <div id="result-badge" class="w-32 h-32 rounded-full overflow-hidden flex items-center justify-center mx-auto shadow-inner bg-slate-100">
+                <img id="result-img" src="Aguinaldin feliz.png" alt="Resultado" class="w-full h-full object-cover">
+            </div>
+
+            <div>
+                <h2 id="result-title" class="text-2xl sm:text-3xl font-extrabold text-slate-800">¡Partida Completada!</h2>
+                <p id="result-subtitle" class="text-slate-500 text-sm mt-1">Aquí está tu resumen de desempeño</p>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-slate-50 border border-slate-100 p-4 rounded-2xl">
+                    <span class="text-slate-400 text-xs font-semibold uppercase block">Puntaje Total</span>
+                    <span id="final-score" class="text-2xl font-extrabold text-indigo-600">0</span>
+                </div>
+                <div class="bg-slate-50 border border-slate-100 p-4 rounded-2xl">
+                    <span class="text-slate-400 text-xs font-semibold uppercase block">Aciertos</span>
+                    <span id="final-accuracy" class="text-2xl font-extrabold text-emerald-500">0%</span>
+                </div>
+                <div class="bg-slate-50 border border-slate-100 p-4 rounded-2xl">
+                    <span class="text-slate-400 text-xs font-semibold uppercase block">Respuestas Correctas</span>
+                    <span id="final-correct" class="text-2xl font-extrabold text-slate-700">0 / 0</span>
+                </div>
+                <div class="bg-slate-50 border border-slate-100 p-4 rounded-2xl">
+                    <span class="text-slate-400 text-xs font-semibold uppercase block">Máxima Racha</span>
+                    <span id="final-streak" class="text-2xl font-extrabold text-amber-500">0 🔥</span>
+                </div>
+            </div>
+<div class="text-left">
+    <h3 class="text-sm font-extrabold text-slate-700 uppercase tracking-wider mb-2">
+        <i class="fa-solid fa-trophy text-amber-500"></i> Ranking
+    </h3>
+    <ol id="ranking-result" class="space-y-1.5 text-sm"></ol>
+</div>
+            <button id="btn-restart" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-lg rounded-2xl shadow-lg hover:shadow-indigo-500/30 transition-all transform active:scale-95 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-rotate-right"></i> Jugar de Nuevo
+            </button>
+                        <button id="btn-home-result" class="w-full py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-2xl transition-all flex items-center justify-center gap-2">
+                <i class="fa-solid fa-house"></i> Volver al Inicio
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+    // "explicacion" es el texto que se muestra en el cartel cuando la respuesta es incorrecta
+    // (o cuando se acaba el tiempo). Edítalo libremente.
+    const QUESTION_BANK = [
+        {
+            categoria: "Aguinaldo",
+            pregunta: "¿Qué es el aguinaldo?",
+            opciones: ["Una remuneración extra", "Un segundo sueldo", "Remuneración para las vacaciones", "Un bono por asistencia"],
+            correcta: 0,
+            explicacion: "El aguinaldo es una remuneración extra que se paga además del salario habitual. No es un segundo sueldo, ni un pago por vacaciones, ni un bono por asistencia."
+        },
+        {
+            categoria: "Aguinaldo",
+            pregunta: "¿Cómo se calcula?",
+            opciones: ["Jornal multiplicado 12", "Suma de lo trabajado en el período dividido 12", "Se suman 6 sueldos", "Jornal por 20"],
+            correcta: 1,
+            explicacion: "Se suma todo lo ganado por el trabajador en el período y el total se divide entre 12. No se calcula multiplicando el jornal ni sumando sueldos fijos."
+        },
+        {
+            categoria: "Aguinaldo",
+            pregunta: "¿Cuándo se paga?",
+            opciones: ["Mayo - Noviembre", "Junio - Enero", "Mayo - Diciembre", "Junio - Diciembre"],
+            correcta: 3,
+            explicacion: "El aguinaldo se paga dos veces al año: en junio y en diciembre. Las demás combinaciones de meses no corresponden."
+        },
+        {
+            categoria: "Aguinaldo",
+            pregunta: "¿Por qué se paga?",
+            opciones: ["Por ley", "Para darle un bono al empleado", "Para reconocer el trabajo del empleado", "Todas son correctas"],
+            correcta: 3,
+            explicacion: "Las tres opciones son ciertas a la vez: se paga porque lo exige la ley, es un beneficio para el empleado y reconoce su trabajo. Por eso la respuesta es \"Todas son correctas\"."
+        },
+        {
+            categoria: "Aguinaldo",
+            pregunta: "Impuestos/Aportes que lo gravan",
+            opciones: ["BPS - Fonasa - FRL", "IVA - IRPF - Fonasa", "Fonasa - BPS", "Ninguno"],
+            correcta: 0,
+            explicacion: "El aguinaldo está gravado por BPS, Fonasa y FRL. Si falta alguno de los tres la respuesta queda incompleta, y el IVA no grava las remuneraciones."
+        },
+        {
+            categoria: "Aguinaldo",
+            pregunta: "Si un trabajador trabajó solamente una parte del período, su aguinaldo:",
+            opciones: ["Se calcula proporcionalmente", "No corresponde", "Se le paga el 50%", "Es igual al de alguien que trabajó todo el período"],
+            correcta: 0,
+            explicacion: "El aguinaldo se calcula sobre lo efectivamente ganado en el período, por eso es proporcional al tiempo trabajado. Corresponde aunque se haya trabajado solo una parte."
+        }
+    ];
+
+    const CATEGORY_STYLES = {
+        "Aguinaldo": { bg: "bg-green-100", text: "text-green-700", icon: "fa-money-bill-wave" }
+    };
+
+    // Estilos del cartel según el resultado
+    const FEEDBACK_STYLES = {
+        correct: {
+            box: "bg-emerald-50 border-emerald-300 text-emerald-800",
+            icon: "fa-circle-check text-emerald-500",
+            title: "¡Correcto, felicitaciones!"
+        },
+        wrong: {
+            box: "bg-rose-50 border-rose-300 text-rose-800",
+            icon: "fa-circle-xmark text-rose-500",
+            title: "Respuesta incorrecta"
+        },
+        timeout: {
+            box: "bg-amber-50 border-amber-300 text-amber-800",
+            icon: "fa-clock text-amber-500",
+            title: "¡Se acabó el tiempo!"
+        }
+    };
+
+    // Mensajes de felicitación (se elige uno según el número de pregunta, así no cambia al volver atrás)
+    const CONGRATS_MESSAGES = [
+        "¡Muy bien! Sabes del tema.",
+        "¡Excelente! Sigue así.",
+        "¡Eso es! Respuesta acertada.",
+        "¡Genial! Vas por buen camino."
+    ];
+
+    const TIME_PER_QUESTION = 20;
+    const TOTAL_QUESTIONS_PER_GAME = 6;
+
+    let gameQuestions = [];
+    let userAnswers = [];
+    let currentQuestionIndex = 0;
+    let timerInterval = null;
+    let timeLeft = TIME_PER_QUESTION;
+    let isAnswered = false;
+
+    // Elementos DOM
+    const screenStart = document.getElementById('screen-start');
+    const screenQuiz = document.getElementById('screen-quiz');
+    const screenResult = document.getElementById('screen-result');
+
+    const btnStart = document.getElementById('btn-start');
+    const btnNext = document.getElementById('btn-next');
+    const btnPrev = document.getElementById('btn-prev');
+    const btnRestart = document.getElementById('btn-restart');
+
+    const categoryBadge = document.getElementById('category-badge');
+    const categoryName = document.getElementById('category-name');
+    const categoryIcon = document.getElementById('category-icon');
+    const questionProgress = document.getElementById('question-progress');
+    const questionText = document.getElementById('question-text');
+    const optionsContainer = document.getElementById('options-container');
+
+    const timerBar = document.getElementById('timer-bar');
+    const timerText = document.getElementById('timer-text');
+    const streakCount = document.getElementById('streak-count');
+    const scoreText = document.getElementById('score-text');
+
+    const feedbackBanner = document.getElementById('feedback-banner');
+    const feedbackIcon = document.getElementById('feedback-icon');
+    const feedbackTitle = document.getElementById('feedback-title');
+    const feedbackText = document.getElementById('feedback-text');
+
+           const RANKING_KEY = 'aguinaldin-ranking';
+    let playerName = '';
+
+    function getRanking() {
+        try {
+            return JSON.parse(localStorage.getItem(RANKING_KEY)) || [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    // Guarda solo si es el mejor puntaje de ese nombre
+    function saveScore(name, score) {
+        const ranking = getRanking();
+        const existing = ranking.find(r => r.name.toLowerCase() === name.toLowerCase());
+        if (existing) {
+            if (score > existing.score) existing.score = score;
+        } else {
+            ranking.push({ name, score });
+        }
+        ranking.sort((a, b) => b.score - a.score);
+        try {
+            localStorage.setItem(RANKING_KEY, JSON.stringify(ranking.slice(0, 20)));
+        } catch (e) {}
+    }
+
+    function renderRanking(listEl) {
+        const ranking = getRanking().slice(0, 5);
+        listEl.innerHTML = '';
+        if (ranking.length === 0) {
+            listEl.innerHTML = '<li class="text-slate-400 text-center">Todavía no hay puntajes. ¡Sé el primero!</li>';
+            return;
+        }
+        const medals = ['🥇', '🥈', '🥉'];
+        ranking.forEach((r, i) => {
+            const li = document.createElement('li');
+            const isMe = r.name.toLowerCase() === playerName.toLowerCase();
+            li.className = `flex items-center justify-between px-3 py-2 rounded-xl ${isMe ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-50 text-slate-700'} font-semibold`;
+            const pos = document.createElement('span');
+            pos.textContent = `${medals[i] || (i + 1) + '.'} `;
+            const nameEl = document.createElement('span');
+            nameEl.className = 'flex-1 ml-2 truncate';
+            nameEl.textContent = r.name;
+            const pts = document.createElement('span');
+            pts.textContent = r.score;
+            li.append(pos, nameEl, pts);
+            listEl.appendChild(li);
+        });
+    }
+
+    function shuffleArray(array) {
+        const arr = [...array];
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+
+    // Oculta el cartel
+    function hideFeedback() {
+        feedbackBanner.classList.add('hidden');
+    }
+
+    // Muestra el cartel: type = 'correct' | 'wrong' | 'timeout'
+    function showFeedback(type, question) {
+        const style = FEEDBACK_STYLES[type];
+
+        feedbackBanner.className = `feedback-in rounded-2xl border-2 p-4 flex items-start gap-3 text-left ${style.box}`;
+        feedbackIcon.className = `fa-solid text-2xl mt-0.5 ${style.icon}`;
+        feedbackTitle.textContent = style.title;
+
+        if (type === 'correct') {
+            feedbackText.textContent = CONGRATS_MESSAGES[currentQuestionIndex % CONGRATS_MESSAGES.length];
+        } else {
+            feedbackText.textContent = question.explicacion;
+        }
+    }
+
+    function recalculateStats() {
+        let score = 0;
+        let streak = 0;
+        let maxStreak = 0;
+        let correctAnswersCount = 0;
+
+        userAnswers.forEach((ans) => {
+            if (ans && ans.isCorrect) {
+                streak++;
+                if (streak > maxStreak) maxStreak = streak;
+                correctAnswersCount++;
+                score += 100 + (ans.timeLeft * 10) + (streak * 20);
+            } else if (ans) {
+                streak = 0;
+            }
+        });
+
+        scoreText.textContent = score;
+        streakCount.textContent = streak;
+
+        return { score, streak, maxStreak, correctAnswersCount };
+    }
+
+function startGame() {
+    const input = document.getElementById('player-name');
+    const nameError = document.getElementById('name-error');
+    if (!screenStart.classList.contains('hidden')) {
+        const typed = input.value.trim();
+        if (!typed) {
+            nameError.classList.remove('hidden');
+            input.focus();
+            return;
+        }
+        nameError.classList.add('hidden');
+        playerName = typed;
+    }
+
+    playMusic();
+
+    const shuffled = shuffleArray(QUESTION_BANK);
+        gameQuestions = shuffled.slice(0, Math.min(TOTAL_QUESTIONS_PER_GAME, shuffled.length)).map(q => {
+            const originalOptions = q.opciones.map((opt, idx) => ({ text: opt, isCorrect: idx === q.correcta }));
+            return {
+                ...q,
+                shuffledOptions: shuffleArray(originalOptions)
+            };
+        });
+
+        userAnswers = new Array(gameQuestions.length).fill(null);
+        currentQuestionIndex = 0;
+
+        scoreText.textContent = "0";
+        streakCount.textContent = "0";
+
+        screenStart.classList.add('hidden');
+        screenResult.classList.add('hidden');
+        screenQuiz.classList.remove('hidden');
+
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        clearInterval(timerInterval);
+        hideFeedback();
+        recalculateStats();
+
+        const q = gameQuestions[currentQuestionIndex];
+        const previousAnswer = userAnswers[currentQuestionIndex];
+
+        if (currentQuestionIndex > 0) {
+            btnPrev.classList.remove('hidden');
+        } else {
+            btnPrev.classList.add('hidden');
+        }
+
+        const catStyle = CATEGORY_STYLES[q.categoria] || { bg: "bg-slate-100", text: "text-slate-700", icon: "fa-question" };
+        categoryBadge.className = `px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-sm ${catStyle.bg} ${catStyle.text}`;
+        categoryName.textContent = q.categoria;
+        categoryIcon.className = `fa-solid ${catStyle.icon}`;
+
+        questionProgress.textContent = `Pregunta ${currentQuestionIndex + 1}/${gameQuestions.length}`;
+        questionText.textContent = q.pregunta;
+
+        optionsContainer.innerHTML = '';
+        q.shuffledOptions.forEach((option) => {
+            const btn = document.createElement('button');
+            btn.className = "btn-option w-full py-3.5 px-4 rounded-xl border-2 border-slate-200 bg-white text-slate-700 font-semibold text-left text-sm sm:text-base hover:border-indigo-400 hover:bg-indigo-50 flex items-center justify-between group";
+            btn.innerHTML = `
+                <span class="option-text">${option.text}</span>
+                <i class="fa-solid fa-circle-check opacity-0 text-white transition-opacity"></i>
+            `;
+
+            btn.addEventListener('click', () => handleAnswer(option, btn, q.shuffledOptions));
+            optionsContainer.appendChild(btn);
+        });
+
+        if (previousAnswer) {
+            isAnswered = true;
+            btnNext.classList.remove('hidden');
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((btn, index) => {
+                btn.disabled = true;
+                const opt = q.shuffledOptions[index];
+
+                if (opt.isCorrect) {
+                    btn.classList.add('correct-anim');
+                    const icon = btn.querySelector('i');
+                    icon.className = "fa-solid fa-circle-check opacity-100 text-white";
+                }
+
+                if (previousAnswer.selectedOption && !previousAnswer.isCorrect && opt.text === previousAnswer.selectedOption.text) {
+                    btn.classList.add('wrong-anim');
+                    const icon = btn.querySelector('i');
+                    icon.className = "fa-solid fa-circle-xmark opacity-100 text-white";
+                }
+            });
+
+            timerText.textContent = `${previousAnswer.timeLeft}s`;
+            timerBar.style.width = `${(previousAnswer.timeLeft / TIME_PER_QUESTION) * 100}%`;
+
+            // Volver a mostrar el cartel de una pregunta ya respondida
+            if (previousAnswer.isCorrect) {
+                showFeedback('correct', q);
+            } else if (previousAnswer.selectedOption) {
+                showFeedback('wrong', q);
+            } else {
+                showFeedback('timeout', q);
+            }
+        } else {
+            isAnswered = false;
+            btnNext.classList.add('hidden');
+            startTimer();
+        }
+    }
+
+    function startTimer() {
+        timeLeft = TIME_PER_QUESTION;
+        updateTimerUI();
+
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            updateTimerUI();
+
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                handleTimeOut();
+            }
+        }, 1000);
+    }
+
+    function updateTimerUI() {
+        timerText.textContent = `${timeLeft}s`;
+        const percentage = (timeLeft / TIME_PER_QUESTION) * 100;
+        timerBar.style.width = `${percentage}%`;
+
+        if (timeLeft <= 5) {
+            timerBar.className = "h-full bg-rose-500 transition-all duration-100 ease-linear w-full";
+        } else {
+            timerBar.className = "h-full bg-indigo-600 transition-all duration-100 ease-linear w-full";
+        }
+    }
+
+    function handleAnswer(selectedOption, selectedBtn, allOptions) {
+        if (isAnswered) return;
+        isAnswered = true;
+        clearInterval(timerInterval);
+
+        userAnswers[currentQuestionIndex] = {
+            selectedOption,
+            isCorrect: selectedOption.isCorrect,
+            timeLeft
+        };
+
+        const buttons = optionsContainer.querySelectorAll('button');
+        buttons.forEach(btn => btn.disabled = true);
+
+        if (selectedOption.isCorrect) {
+            playSfx(sfxCorrect);
+            selectedBtn.classList.add('correct-anim');
+            const icon = selectedBtn.querySelector('i');
+            icon.className = "fa-solid fa-circle-check opacity-100 text-white";
+        } else {
+            playSfx(sfxWrong);
+            selectedBtn.classList.add('wrong-anim');
+            const icon = selectedBtn.querySelector('i');
+            icon.className = "fa-solid fa-circle-xmark opacity-100 text-white";
+
+            buttons.forEach((btn, index) => {
+                if (allOptions[index].isCorrect) {
+                    btn.classList.add('correct-anim');
+                    const correctIcon = btn.querySelector('i');
+                    correctIcon.className = "fa-solid fa-circle-check opacity-100 text-white";
+                }
+            });
+        }
+
+        // Cartel: felicitación si acertó, justificación si falló
+        showFeedback(selectedOption.isCorrect ? 'correct' : 'wrong', gameQuestions[currentQuestionIndex]);
+
+        recalculateStats();
+        btnNext.classList.remove('hidden');
+    }
+
+    function handleTimeOut() {
+        if (isAnswered) return;
+        isAnswered = true;
+
+        userAnswers[currentQuestionIndex] = {
+            selectedOption: null,
+            isCorrect: false,
+            timeLeft: 0
+        };
+
+        const buttons = optionsContainer.querySelectorAll('button');
+        buttons.forEach(btn => btn.disabled = true);
+
+        const q = gameQuestions[currentQuestionIndex];
+        buttons.forEach((btn, index) => {
+            if (q.shuffledOptions[index].isCorrect) {
+                btn.classList.add('correct-anim');
+                const correctIcon = btn.querySelector('i');
+                correctIcon.className = "fa-solid fa-circle-check opacity-100 text-white";
+            }
+        });
+
+        // Cartel: se acabó el tiempo + explicación
+        showFeedback('timeout', q);
+
+        recalculateStats();
+        btnNext.classList.remove('hidden');
+    }
+    function goHome() {
+        clearInterval(timerInterval);
+        hideFeedback();
+        bgMusic.pause();
+        bgMusic.currentTime = 0;
+
+        screenQuiz.classList.add('hidden');
+        screenResult.classList.add('hidden');
+        screenStart.classList.remove('hidden');
+
+        renderRanking(document.getElementById('ranking-start'));
+    }
+    function prevQuestion() {
+        if (currentQuestionIndex > 0) {
+            currentQuestionIndex--;
+            loadQuestion();
+        }
+    }
+
+    function nextQuestion() {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < gameQuestions.length) {
+            loadQuestion();
+        } else {
+            showResults();
+        }
+    }
+
+    function showResults() {
+        bgMusic.pause();
+        clearInterval(timerInterval);
+        hideFeedback();
+        screenQuiz.classList.add('hidden');
+        screenResult.classList.remove('hidden');
+
+        const stats = recalculateStats();
+        saveScore(playerName, stats.score);
+renderRanking(document.getElementById('ranking-result'));
+        const accuracy = Math.round((stats.correctAnswersCount / gameQuestions.length) * 100);
+
+        document.getElementById('final-score').textContent = stats.score;
+        document.getElementById('final-accuracy').textContent = `${accuracy}%`;
+        document.getElementById('final-correct').textContent = `${stats.correctAnswersCount} / ${gameQuestions.length}`;
+        document.getElementById('final-streak').textContent = `${stats.maxStreak} 🔥`;
+
+        const resultBadge = document.getElementById('result-badge');
+        const resultImg = document.getElementById('result-img');
+        const resultTitle = document.getElementById('result-title');
+        const resultSubtitle = document.getElementById('result-subtitle');
+
+        if (accuracy >= 80) {
+            resultBadge.className = "w-32 h-32 bg-amber-100 rounded-full overflow-hidden flex items-center justify-center mx-auto shadow-inner";
+            resultImg.src = "Aguinaldin Asombrado.png";
+            resultTitle.textContent = "¡Increíble Desempeño!";
+            resultSubtitle.textContent = "¡Eres un verdadero maestro de la trivia!";
+        } else if (accuracy >= 50) {
+            resultBadge.className = "w-32 h-32 bg-indigo-100 rounded-full overflow-hidden flex items-center justify-center mx-auto shadow-inner";
+            resultImg.src = "Aguinaldin triste.png";
+            resultTitle.textContent = "¡Buen Trabajo!";
+            resultSubtitle.textContent = "Tienes amplios conocimientos, ¡sigue practicando!";
+        } else {
+            resultBadge.className = "w-32 h-32 bg-slate-100 rounded-full overflow-hidden flex items-center justify-center mx-auto shadow-inner";
+            resultImg.src = "Aguinaldin Triste (2).png";
+            resultTitle.textContent = "¡Buen Intento!";
+            resultSubtitle.textContent = "¡No te rindas! Vuelve a intentarlo para superar tu marca.";
+        }
+    }
+renderRanking(document.getElementById('ranking-start'));
+const bgMusic = document.getElementById('bg-music');
+const btnMusic = document.getElementById('btn-music');
+const musicIcon = document.getElementById('music-icon');
+let musicOn = true;
+
+bgMusic.volume = 0.3; 
+
+function playMusic() {
+    if (!musicOn) return;
+    bgMusic.play().catch(() => {});
+}
+const sfxCorrect = document.getElementById('sfx-correct');
+const sfxWrong = document.getElementById('sfx-wrong');
+
+function playSfx(sound) {
+    if (!musicOn) return;
+    sound.currentTime = 0;
+    sound.play().catch(() => {});
+}
+
+function toggleMusic() {
+    musicOn = !musicOn;
+    if (musicOn) {
+        bgMusic.play().catch(() => {});
+        musicIcon.className = 'fa-solid fa-volume-high';
+    } else {
+        bgMusic.pause();
+        musicIcon.className = 'fa-solid fa-volume-xmark';
+    }
+}
+
+btnMusic.addEventListener('click', toggleMusic);
+    btnStart.addEventListener('click', startGame);
+    btnNext.addEventListener('click', nextQuestion);
+    btnPrev.addEventListener('click', prevQuestion);
+    btnRestart.addEventListener('click', startGame);
+        document.getElementById('btn-home-result').addEventListener('click', goHome);
+    document.getElementById('btn-home-quiz').addEventListener('click', () => {
+        if (confirm('¿Querés abandonar la partida? Se perderá tu progreso.')) goHome();
+    });
+    </script>
+</body>
+</html>
